@@ -17,15 +17,21 @@ async function getHackerNews() {
     const data = await response.json() as number[];
     console.log(data);
 
-    // fetch top 10 stories
-    const stories = await Promise.all(
-      data.slice(0, 10).map(async (id: number) => {
+    // Create new array of first 10 hacker rank story ids from the initial array of 500 IDs returned by fetch above.
+    const first10Ids = data.slice(0, 10);
+
+  // Creates a new array of unresolved Promise<Story> by mapping over the first 10 IDs
+  // Each promise will fetch and resolve to a Story object from the Hacker News API.
+    const storyPromises = first10Ids.map(async (id: number) => {
         const storyResponse = await fetch(
-          `https://hacker-news.firebaseio.com/v0/item/${id}.json`,
+            `https://hacker-news.firebaseio.com/v0/item/${id}.json`,
         );
         return storyResponse.json() as Promise<Story>;
-      }),
-    );
+    });
+
+   // Converts the array of Promise<Story> into array of Stories by waiting for all fetch requests to resolve
+    const stories = await Promise.all(storyPromises);
+
     console.log(stories);
     return stories;
 
