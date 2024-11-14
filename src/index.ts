@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import { Telegraf } from 'telegraf';
 
-interface Story {
+interface Storys {
   id: number;
   title: string;
   url?: string;
