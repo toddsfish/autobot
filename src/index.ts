@@ -1,5 +1,10 @@
 import * as dotenv from 'dotenv';
-import { Telegraf } from 'telegraf';
+import { Scenes, session, Telegraf, Context } from 'telegraf';
+
+interface MyContext extends Context {
+  scene: Scenes.SceneContextScene<MyContext>;
+  session: Scenes.SceneSession;
+}
 
 interface Story {
   id: number;
@@ -15,13 +20,13 @@ async function getHackerNews() {
     const response = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
     //console.log(response);
     const data = await response.json() as number[];
-    console.log(data);
+    // console.log(data);
 
     // Create new array of first 10 hacker rank story ids from the initial array of 500 IDs returned by fetch above.
     const first10Ids = data.slice(0, 10);
 
-    // Creates a new array of unresolved Promise<Story> by mapping over the first 10 IDs
-    // Each promise will fetch and resolve to a Story object from the Hacker News API.
+    // Maps over the first10Ids array to create an array of promises, where each promise
+    // represents an ongoing fetch request to the Hacker News API to retrieve a story
     const storyPromises = first10Ids.map(async (id: number) => {
       const storyResponse = await fetch(
         `https://hacker-news.firebaseio.com/v0/item/${id}.json`,
@@ -41,6 +46,14 @@ async function getHackerNews() {
   }
 }
 
+async function getSeekJobs() {
+  // scrape seek.com.au with Crawlee for job matching an input string
+
+
+}
+
+// Main Section
+
 dotenv.config({
   // path to .env
   path: '../.env',
@@ -51,7 +64,9 @@ if (!token) {
   throw new Error('BOT_TOKEN environment variable is not set');
 }
 
-const bot = new Telegraf(token);
+const bot = new Telegraf<MyContext>(token);
+
+// Hacker News Automation
 bot.command('hackernews', async (ctx) => {
   try {
     await ctx.sendChatAction('typing');
@@ -71,12 +86,32 @@ bot.command('hackernews', async (ctx) => {
     await ctx.reply('Sorry, there was an error fetching Hacker News stories');
   }
 });
+
+// Surf Report Automation
 bot.command('surfreport', async (ctx) => {
   await ctx.sendChatAction('typing');
   // fetch surf report
 });
+
+// Jobs Automation
+// Give me a basic scene for jobs that enters the scene and replies
+const jobScene = new Scenes.BaseScene<Scenes.SceneContext>('jobScene');
+jobScene.enter(async (ctx) => {
+  await ctx.reply('Welcome to the Job Automation scene!');
+  await ctx.reply('What would you like to do?');
+  await ctx.reply('1. Search Seek Jobs');
+  await ctx.reply('8. Exit');
+});
+
+const stage = new Scenes.Stage<Scenes.SceneContext>([jobScene]);
+bot.use(session());
+bot.use(stage.middleware());
+// Add command to enter scene
+bot.command('jobs', (ctx) => ctx.scene.enter('jobScene'));
+
+
 void bot.launch();
-console.log(bot);
+//console.log(bot);
 
 //Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));

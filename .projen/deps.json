@@ -67,7 +67,15 @@
       "type": "build"
     },
     {
+      "name": "crawlee",
+      "type": "runtime"
+    },
+    {
       "name": "dotenv",
+      "type": "runtime"
+    },
+    {
+      "name": "playwright",
       "type": "runtime"
     },
     {
